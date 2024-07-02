@@ -156,6 +156,8 @@ class HwPCReportHandler(Handler):
 
         # compute per-target power report
         for target_name, target_report in hwpc_reports.items():
+            # self._gen_core_events_group give us a dict where callchains is a key.
+            # maybe extract it and append to power_reports
             raw_target_power = model.compute_power_estimation(self._gen_core_events_group(target_report))
             target_power, target_ratio = model.cap_power_estimation(raw_target_power, raw_global_power)
             power_reports.append(
@@ -166,7 +168,9 @@ class HwPCReportHandler(Handler):
                     raw_target_power,
                     target_power,
                     target_ratio,
-                    target_report.metadata)
+                    target_report.metadata,
+                    # get callchain here
+                    )
             )
 
         # compute power model error from reference
@@ -205,7 +209,7 @@ class HwPCReportHandler(Handler):
         }
         return FormulaReport(timestamp, self.state.sensor, model.hash, metadata)
 
-    def _gen_power_report(self, timestamp, target, formula, raw_power, power, ratio, metadata):
+    def _gen_power_report(self, timestamp, target, formula, raw_power, power, ratio, metadata, callchains=''):
         """
         Generate a power report using the given parameters.
         :param timestamp: Timestamp of the measurements
@@ -220,6 +224,7 @@ class HwPCReportHandler(Handler):
             'formula': formula,
             'ratio': ratio,
             'predict': raw_power,
+            'callchains': callchains,
         })
         return PowerReport(timestamp, self.state.sensor, target, power, metadata)
 

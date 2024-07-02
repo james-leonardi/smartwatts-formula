@@ -85,6 +85,7 @@ class PowerModel:
         :param events: Events group
         :return: List containing the events value sorted by event name
         """
+        # possibly exclude callchains here
         return [value for _, value in sorted(events.items())]
 
     def store_report_in_history(self, power_reference: float, events: Dict[str, float]) -> None:
