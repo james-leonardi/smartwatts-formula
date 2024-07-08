@@ -156,9 +156,9 @@ class HwPCReportHandler(Handler):
 
         # compute per-target power report
         for target_name, target_report in hwpc_reports.items():
-            # self._gen_core_events_group give us a dict where callchains is a key.
-            # maybe extract it and append to power_reports
-            raw_target_power = model.compute_power_estimation(self._gen_core_events_group(target_report))
+            core_events = self._gen_core_events_group(target_report)
+            callchains = core_events.pop('callchains', '')
+            raw_target_power = model.compute_power_estimation(core_events)
             target_power, target_ratio = model.cap_power_estimation(raw_target_power, raw_global_power)
             power_reports.append(
                 self._gen_power_report(
@@ -169,8 +169,7 @@ class HwPCReportHandler(Handler):
                     target_power,
                     target_ratio,
                     target_report.metadata,
-                    # get callchain here
-                    )
+                    callchains)
             )
 
         # compute power model error from reference
@@ -262,7 +261,10 @@ class HwPCReportHandler(Handler):
         core_events_group = defaultdict(int)
         for _, cpu_events in report.groups['core'][str(self.state.socket)].items():
             for event_name, event_value in {k: v for k, v in cpu_events.items() if not k.startswith('time_')}.items():
-                core_events_group[event_name] += event_value
+                try:
+                    core_events_group[event_name] += event_value
+                except TypeError:
+                    core_events_group[event_name] = event_value
 
         return core_events_group
 
@@ -275,6 +277,9 @@ class HwPCReportHandler(Handler):
         agg_core_events_group = defaultdict(int)
         for _, target_report in targets_report.items():
             for event_name, event_value in self._gen_core_events_group(target_report).items():
-                agg_core_events_group[event_name] += event_value
+                try:
+                    agg_core_events_group[event_name] += event_value
+                except TypeError:
+                    agg_core_events_group[event_name] = event_value
 
         return agg_core_events_group
