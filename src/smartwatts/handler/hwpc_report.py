@@ -136,6 +136,7 @@ class HwPCReportHandler(Handler):
 
         if not global_core:
             return power_reports, formula_reports
+        del global_core['callchain']
 
         # fetch power model to use
         try:
@@ -157,7 +158,7 @@ class HwPCReportHandler(Handler):
         # compute per-target power report
         for target_name, target_report in hwpc_reports.items():
             core_events = self._gen_core_events_group(target_report)
-            callchains = core_events.pop('callchains', '')
+            callchain = core_events.pop('callchain', '')
             raw_target_power = model.compute_power_estimation(core_events)
             target_power, target_ratio = model.cap_power_estimation(raw_target_power, raw_global_power)
             power_reports.append(
@@ -169,7 +170,7 @@ class HwPCReportHandler(Handler):
                     target_power,
                     target_ratio,
                     target_report.metadata,
-                    callchains)
+                    callchain)
             )
 
         # compute power model error from reference
@@ -208,7 +209,7 @@ class HwPCReportHandler(Handler):
         }
         return FormulaReport(timestamp, self.state.sensor, model.hash, metadata)
 
-    def _gen_power_report(self, timestamp, target, formula, raw_power, power, ratio, metadata, callchains=''):
+    def _gen_power_report(self, timestamp, target, formula, raw_power, power, ratio, metadata, callchain=''):
         """
         Generate a power report using the given parameters.
         :param timestamp: Timestamp of the measurements
@@ -223,7 +224,7 @@ class HwPCReportHandler(Handler):
             'formula': formula,
             'ratio': ratio,
             'predict': raw_power,
-            'callchains': callchains,
+            'callchain': callchain,
         })
         return PowerReport(timestamp, self.state.sensor, target, power, metadata)
 
