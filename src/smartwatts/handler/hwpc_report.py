@@ -136,7 +136,10 @@ class HwPCReportHandler(Handler):
 
         if not global_core:
             return power_reports, formula_reports
-        del global_core['callchain']
+        try:
+            del global_core['callchain']
+        except KeyError:
+            pass # ignore
 
         # fetch power model to use
         try:
